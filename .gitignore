@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+Thumbs.db
+.claude/.prompt-history-state.json
+.claude/settings.local.json
+*.log
+dist/

@@ -13,7 +13,7 @@ const types = {
   '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
 };
 
-http.createServer((req, res) => {
+const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   let file = path.normalize(path.join(root, urlPath));
   if (!file.startsWith(root)) { res.writeHead(403); return res.end(); }
@@ -31,4 +31,19 @@ http.createServer((req, res) => {
     'X-Frame-Options': 'DENY',
   });
   fs.createReadStream(file).pipe(res);
-}).listen(port, () => console.log(`Blendwise dev server: http://localhost:${port}/`));
+});
+
+// If the requested port is busy (for example another dev server is still running), try the next few.
+function listen(p, attemptsLeft) {
+  server.once('error', (err) => {
+    if (err.code === 'EADDRINUSE' && attemptsLeft > 0) {
+      console.warn(`port ${p} is in use, trying ${p + 1}`);
+      listen(p + 1, attemptsLeft - 1);
+    } else {
+      console.error(err.message);
+      process.exit(1);
+    }
+  });
+  server.listen(p, () => console.log(`Blendwise dev server: http://localhost:${p}/`));
+}
+listen(port, 10);

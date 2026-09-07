@@ -55,7 +55,7 @@ Properties are limited to the whitelist in `telemetry.js`; strings are cut to 40
 
 1. `node scripts/bump-version.mjs x.y.z` (updates package.json, config.js and the service worker cache name).
 2. `npm test`.
-3. Deploy `src/` over HTTPS with these headers:
+3. Deploy the Docker image (`Dockerfile` + `docker/nginx.conf`, which already sets the headers below) behind an HTTPS proxy, or deploy `src/` to a static host with these headers:
    - `Strict-Transport-Security: max-age=63072000; includeSubDomains`
    - `X-Content-Type-Options: nosniff`
    - `Referrer-Policy: strict-origin-when-cross-origin`

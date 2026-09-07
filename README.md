@@ -36,9 +36,23 @@ To run the unit tests and the static checks:
 npm test
 ```
 
+## Run in Docker
+
+The image is nginx plus the `src/` folder, with the security headers and cache rules from `docker/nginx.conf`.
+
+```bash
+docker compose up --build -d
+```
+
+Then open http://localhost:8081/ (8081 so it can run beside `npm start`). Stop it with `docker compose down`. To build and run without compose:
+
+```bash
+docker build -t blendwise:local . && docker run --rm -p 8081:80 blendwise:local
+```
+
 ## Deploy
 
-Copy the `src/` folder to any static host served over HTTPS (GitHub Pages, Netlify, Cloudflare Pages, S3 + CloudFront).
+Deploy the container (any host that runs Docker images behind an HTTPS proxy), or copy the `src/` folder to any static host served over HTTPS (GitHub Pages, Netlify, Cloudflare Pages, S3 + CloudFront).
 Before release:
 
 1. Set the version with `node scripts/bump-version.mjs 1.0.1` so installed clients update.

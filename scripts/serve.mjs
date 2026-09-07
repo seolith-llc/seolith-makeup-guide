@@ -44,6 +44,7 @@ function listen(p, attemptsLeft) {
       process.exit(1);
     }
   });
-  server.listen(p, () => console.log(`Blendwise dev server: http://localhost:${p}/`));
+  server.listen(p);
 }
+server.on('listening', () => console.log(`Blendwise dev server: http://localhost:${server.address().port}/`));
 listen(port, 10);

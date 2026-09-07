@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/prompt-history.mjs",
+            "timeout": 15,
+            "statusMessage": "Saving prompt to docs/prompts-history"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/prompt-history.mjs",
+            "timeout": 15,
+            "statusMessage": "Saving response to docs/prompts-history"
+          }
+        ]
+      }
+    ]
+  }
+}

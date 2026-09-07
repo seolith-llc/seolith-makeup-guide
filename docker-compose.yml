@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    image: blendwise:local
+    container_name: blendwise
+    ports:
+      # 8081 so it can run beside `npm start` (which uses 8080). Change the left-hand number to taste.
+      - "8081:80"
+    restart: unless-stopped

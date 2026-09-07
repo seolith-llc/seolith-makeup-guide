@@ -45,7 +45,8 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_VERSION).then((cache) => cache.addAll(PRECACHE)));
+  // cache: 'reload' bypasses the browser HTTP cache so a new version never precaches stale files.
+  event.waitUntil(caches.open(CACHE_VERSION).then((cache) => cache.addAll(PRECACHE.map((u) => new Request(u, { cache: 'reload' })))));
 });
 
 self.addEventListener('activate', (event) => {

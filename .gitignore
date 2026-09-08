@@ -5,3 +5,7 @@ Thumbs.db
 .claude/settings.local.json
 *.log
 dist/
+
+# Cloudflare Tunnel credentials are machine-local; never commit them
+deploy/cloudflared/credentials.json
+deploy/.env

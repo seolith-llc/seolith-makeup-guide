@@ -1,0 +1,31 @@
+# Blendwise production stack: nginx (the app) + a Cloudflare Tunnel connector.
+#
+# No ports are published. Cloudflare terminates TLS at the edge and reaches nginx over the
+# tunnel, so the host needs no inbound 80/443 and no certificate. The same file runs on the
+# OVH host and, as an interim origin, on a workstation (see docs/deploy-ovh.md).
+#
+#   docker compose -f deploy/docker-compose.ovh.yml -p blendwise up -d --build
+#
+# Requires deploy/cloudflared/credentials.json (machine-local, gitignored): the tunnel
+# credentials created with `cloudflared tunnel create blendwise`.
+
+services:
+  web:
+    build:
+      context: ..
+    image: blendwise:${IMAGE_TAG:-prod}
+    container_name: blendwise-web
+    restart: unless-stopped
+    # Healthcheck comes from the Dockerfile.
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.8.3
+    container_name: blendwise-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflared/blendwise.yml:/etc/cloudflared/config.yml:ro
+      - ./cloudflared/credentials.json:/etc/cloudflared/credentials.json:ro
+    depends_on:
+      web:
+        condition: service_healthy

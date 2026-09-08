@@ -43,6 +43,8 @@ function writeState(state) {
 function onPromptSubmit(payload) {
   const prompt = String(payload.prompt || '').trim();
   if (!prompt) return;
+  // Background-task and system notifications are injected as prompts by the harness; they are not user requests.
+  if (/^\[SYSTEM NOTIFICATION|^<task-notification>|^<ci-monitor-event>/i.test(prompt)) return;
   fs.mkdirSync(historyDir, { recursive: true });
   const now = new Date();
   const file = path.join(historyDir, `${timestamp(now)}-${slugify(prompt)}.md`);

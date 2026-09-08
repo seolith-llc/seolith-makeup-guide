@@ -2,7 +2,7 @@
 export const CONFIG = Object.freeze({
   appName: 'Blendwise',
   tagline: 'Blend wisely. Step-by-step makeup, offline.',
-  version: '1.0.0',
+  version: '1.1.0',
   // Amazon Associates tracking id, e.g. "blendwise-20". Leave empty until you are enrolled;
   // links then become plain search links with no tag.
   affiliate: {

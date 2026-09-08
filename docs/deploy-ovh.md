@@ -12,9 +12,12 @@ the stack somewhere else with the same tunnel credentials.
 | DNS record | `blendwise` CNAME `86a75bb1-3e1e-4d53-89c3-09e7b8658e59.cfargotunnel.com` (created 2026-09-07 with `cloudflared tunnel route dns`) |
 | Compose file | `deploy/docker-compose.ovh.yml` (services `web`, `tunnel`) |
 | Tunnel config | `deploy/cloudflared/blendwise.yml` |
-| Credentials | `deploy/cloudflared/credentials.json`, gitignored, mode 600. Source: `~/.cloudflared/86a75bb1-3e1e-4d53-89c3-09e7b8658e59.json` on the workstation that created the tunnel |
-| Install path on OVH | `/opt/seolith/prod/blendwise` |
-| Deploy command | `./deploy/ovh-deploy.sh` |
+| Credentials | `deploy/cloudflared/credentials.json`, gitignored. On the host it must be owned by uid 65532 (the `cloudflared` image's `nonroot` user) with mode 400; `ovh-deploy.sh` enforces this. Source: `~/.cloudflared/86a75bb1-3e1e-4d53-89c3-09e7b8658e59.json` on the workstation that created the tunnel |
+| OVH host | `vps-57bebaca.vps.ovh.us` = `40.160.89.57` (VPS-1, Ubuntu, Virginia). Also hosts the tax-manager stack behind Caddy; Blendwise does not use Caddy or any port. |
+| SSH | `ssh -i ~/.ssh/ovh-foxy ubuntu@40.160.89.57` from the workstation that holds that key |
+| Install path on OVH | `/opt/blendwise` (this host keeps projects directly under `/opt`) |
+| Repo access on host | None. Deploy keys are disabled by the org policy, so the workstation pushes a `git archive` of the commit over SSH (`deploy/push-to-ovh.sh`); the host never needs GitHub credentials. |
+| Deploy command | `./deploy/push-to-ovh.sh` on the workstation (runs `deploy/ovh-deploy.sh` on the host) |
 
 ## 1. Host
 
@@ -28,48 +31,35 @@ If the app is placed on an existing OVH host (omnifield staging `135.148.44.231`
 or `ovh-app-host-01`), it lives in its own compose project and its own directory and does not touch Caddy,
 Traefik or any other project's network.
 
-## 2. First deployment
+## 2. First deployment (done 2026-09-07)
 
-On the workstation that created the tunnel (it holds the credentials file):
-
-```bash
-scp -i <ovh-ssh-key> ~/.cloudflared/86a75bb1-3e1e-4d53-89c3-09e7b8658e59.json seolith@<VPS_IP>:/tmp/blendwise-credentials.json
-```
-
-On the host:
+One-time, from the workstation that created the tunnel (it holds the credentials file):
 
 ```bash
-sudo mkdir -p /opt/seolith/prod && sudo chown "$USER" /opt/seolith/prod
-cd /opt/seolith/prod
-git clone https://github.com/seolith-llc/seolith-makeup-guide.git blendwise   # private repo: use a read-only deploy key or `gh auth login`
-cd blendwise
-install -m 600 /tmp/blendwise-credentials.json deploy/cloudflared/credentials.json && rm /tmp/blendwise-credentials.json
-./deploy/ovh-deploy.sh
+scp -i ~/.ssh/ovh-foxy ~/.cloudflared/86a75bb1-3e1e-4d53-89c3-09e7b8658e59.json ubuntu@40.160.89.57:/tmp/blendwise-credentials.json
+ssh -i ~/.ssh/ovh-foxy ubuntu@40.160.89.57 'sudo mkdir -p /opt/blendwise && sudo chown ubuntu:ubuntu /opt/blendwise && mkdir -p /opt/blendwise/deploy/cloudflared && install -m 600 /tmp/blendwise-credentials.json /opt/blendwise/deploy/cloudflared/credentials.json && rm /tmp/blendwise-credentials.json'
+./deploy/push-to-ovh.sh
 ```
 
-The script builds the image from source, starts the stack, waits for nginx to be healthy and for the
-connector to log `Registered tunnel connection`. Then check from anywhere:
+`push-to-ovh.sh` streams `git archive HEAD` into `/opt/blendwise` and runs `deploy/ovh-deploy.sh` there, which
+builds the image from source, starts the stack, waits for nginx to be healthy and for the connector to log
+`Registered tunnel connection`. Then check from anywhere:
 
 ```bash
 curl -sI https://blendwise.amtocsoft.com/ | head -5
 ```
 
-For a private repo without `gh` on the host, create a read-only deploy key:
-
-```bash
-ssh-keygen -t ed25519 -f ~/.ssh/blendwise-deploy -N "" -C blendwise-deploy@ovh
-gh repo deploy-key add ~/.ssh/blendwise-deploy.pub --repo seolith-llc/seolith-makeup-guide --title "ovh read-only"
-git remote set-url origin git@github.com:seolith-llc/seolith-makeup-guide.git
-```
-
 ## 3. Updating
 
+Commit, bump the version first (`node scripts/bump-version.mjs x.y.z`) so installed PWAs pick up the new
+service worker cache, then:
+
 ```bash
-cd /opt/seolith/prod/blendwise && ./deploy/ovh-deploy.sh
+./deploy/push-to-ovh.sh            # HEAD
+REF=v1.2.0 ./deploy/push-to-ovh.sh # a tag or commit
 ```
 
-It resets the checkout to `origin/main`, rebuilds, and restarts only what changed. Bump the app version first
-(`node scripts/bump-version.mjs x.y.z`) so installed PWAs pick up the new service worker cache.
+Only committed files are sent. The host records the deployed commit in `/opt/blendwise/.deployed-sha`.
 
 ## 4. Cutover from the interim origin
 

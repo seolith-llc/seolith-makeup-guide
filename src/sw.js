@@ -1,7 +1,7 @@
 // Blendwise service worker: precache the whole app so it runs fully offline.
 // Bump CACHE_VERSION on every release (scripts/bump-version.mjs does this).
 
-const CACHE_VERSION = 'blendwise-v1.0.0';
+const CACHE_VERSION = 'blendwise-v1.1.0';
 const PRECACHE = [
   './',
   './index.html',
@@ -17,6 +17,7 @@ const PRECACHE = [
   './js/dom.js',
   './js/estimator.js',
   './js/face.js',
+  './js/icons.js',
   './js/pwa.js',
   './js/router.js',
   './js/store.js',

@@ -1,6 +1,6 @@
 {
   "name": "blendwise",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Blendwise: an offline-first PWA makeup guide with guided routines, before/after illustration, time estimates, product picks, kit tracker, feedback and an anonymous admin dashboard.",
   "type": "module",

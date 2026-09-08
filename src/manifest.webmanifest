@@ -7,8 +7,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#fbf6f4",
-  "theme_color": "#7a3b4e",
+  "background_color": "#faf5ef",
+  "theme_color": "#6c2436",
   "lang": "en",
   "categories": ["beauty", "lifestyle", "education"],
   "icons": [

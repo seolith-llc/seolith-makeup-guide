@@ -29,7 +29,7 @@ if [[ -d .git && "${SKIP_PULL:-0}" != "1" ]]; then
   echo "checked out $(git rev-parse --short HEAD)"
 fi
 
-export IMAGE_TAG="$(git rev-parse --short HEAD 2>/dev/null || echo prod)"
+export IMAGE_TAG="${IMAGE_TAG:-$(git rev-parse --short HEAD 2>/dev/null || cat .deployed-sha 2>/dev/null || echo prod)}"
 "${compose[@]}" build --pull
 "${compose[@]}" up -d --remove-orphans
 

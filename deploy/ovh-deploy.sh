@@ -15,8 +15,13 @@ docker compose version >/dev/null 2>&1 || { echo "docker compose plugin is not i
 
 creds=deploy/cloudflared/credentials.json
 [[ -f "$creds" ]] || { echo "missing $creds: copy ~/.cloudflared/<tunnel-id>.json from the workstation that created the tunnel" >&2; exit 1; }
-mode=$(stat -c '%a' "$creds" 2>/dev/null || stat -f '%Lp' "$creds")
-[[ "$mode" == "600" || "$mode" == "400" ]] || { echo "tightening $creds to mode 600"; chmod 600 "$creds"; }
+# The cloudflared image runs as the "nonroot" user (uid 65532); the file must be readable by it and nobody else.
+owner=$(stat -c '%u' "$creds" 2>/dev/null || echo unknown)
+mode=$(stat -c '%a' "$creds" 2>/dev/null || echo unknown)
+if [[ "$owner" != "65532" || "$mode" != "400" ]]; then
+  echo "setting $creds to owner 65532 (cloudflared nonroot), mode 400"
+  sudo chown 65532:65532 "$creds" && sudo chmod 400 "$creds"
+fi
 
 if [[ -d .git && "${SKIP_PULL:-0}" != "1" ]]; then
   git fetch --quiet origin main

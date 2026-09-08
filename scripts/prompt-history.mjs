@@ -102,8 +102,18 @@ function collectResponse(transcriptPath) {
 
 function onStop(payload) {
   const state = readState();
-  const rec = state[payload.session_id || 'default'];
-  if (!rec || !rec.file || !fs.existsSync(rec.file)) return;
+  let rec = state[payload.session_id || 'default'];
+  if (!rec || !rec.file || !fs.existsSync(rec.file)) {
+    // No state for this session (state file removed or first run): fall back to the newest entry still awaiting a response.
+    let pending;
+    try {
+      pending = fs.readdirSync(historyDir).filter((f) => f.endsWith('.md')).sort().reverse()
+        .map((f) => path.join(historyDir, f))
+        .find((f) => fs.readFileSync(f, 'utf8').includes('\n_pending_\n'));
+    } catch {}
+    if (!pending) return;
+    rec = { file: pending };
+  }
   const response = collectResponse(payload.transcript_path || '') || '_(no text response captured)_';
   let md = fs.readFileSync(rec.file, 'utf8');
   const marker = '## Response\n\n';

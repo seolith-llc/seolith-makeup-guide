@@ -9,7 +9,7 @@
 set -euo pipefail
 
 HOST="${HOST:-ubuntu@40.160.89.57}"
-KEY="${KEY:-$HOME/.ssh/ovh-foxy}"
+KEY="${KEY:-$HOME/.ssh/blendwise-ops}"
 DEST="${DEST:-/opt/blendwise}"
 REF="${REF:-HEAD}"
 

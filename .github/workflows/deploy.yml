@@ -31,7 +31,7 @@ env:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: '["self-hosted","Linux","X64","seolith-local","linux-build"]'
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
     name: Deploy to OVH
     needs: test
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: '["self-hosted","Linux","X64","seolith-local","linux-build"]'
     timeout-minutes: 15
     environment:
       name: production

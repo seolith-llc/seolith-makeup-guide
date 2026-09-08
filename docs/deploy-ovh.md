@@ -77,8 +77,25 @@ tunnel across every connected connector, so the move is:
 - Take the site offline: `docker compose -f deploy/docker-compose.ovh.yml -p blendwise down` (Cloudflare returns a 530 page while no connector is up).
 - Remove entirely: also `cloudflared tunnel delete blendwise` and delete the CNAME in the Cloudflare dashboard.
 
-## 6. What is deliberately not here
+## 6. Continuous deployment (push to main)
 
-- No GitHub Actions deploy over SSH: the estate keeps long-lived SSH keys out of GitHub and deploys from the host (see the TWBB runbook). A self-hosted runner on the OVH host could run `deploy/ovh-deploy.sh` on push if wanted later.
+`.github/workflows/deploy.yml` runs `npm test`, then streams `git archive <sha>` over SSH to
+`ubuntu@40.160.89.57` and smoke-tests the live site. Same delivery as the tax-manager repo on this host, with
+two hardenings:
+
+- The CI key (`blendwise-ci@github-actions`, repo secrets `OVH_SSH_KEY` and `OVH_HOST`) is listed in
+  `~ubuntu/.ssh/authorized_keys` with `restrict,command="/opt/blendwise/deploy/ci-receive.sh"`. sshd ignores
+  whatever the job asks for and runs only that script, which validates the request (`deploy <sha>`), extracts the
+  archive into a staging directory, syncs it into `/opt/blendwise` (keeping `credentials.json`) and runs
+  `ovh-deploy.sh`. The key cannot open a shell or read anything else.
+- The host's ed25519 public key is pinned in the workflow, so a re-imaged or spoofed host fails closed. If the VPS
+  is rebuilt, update `OVH_HOST_KEY` from `ssh-keyscan -t ed25519 40.160.89.57`.
+
+To rotate the CI key: `ssh-keygen -t ed25519 -N "" -f blendwise-ci`, replace the `blendwise-ci@github-actions`
+line in `authorized_keys` (keep the `restrict,command=` prefix), then `gh secret set OVH_SSH_KEY < blendwise-ci`.
+
+Manual deploys from a workstation still work with `./deploy/push-to-ovh.sh` (uses the operator key, unrestricted).
+
+## 7. What is deliberately not here
 - No origin certificate or Caddy: Cloudflare Universal SSL covers `blendwise.amtocsoft.com` at the edge and the tunnel is encrypted end to end.
 - No telemetry or feedback server: the app stores everything on the user's device. Nothing on the host holds user data, so there is nothing to back up.

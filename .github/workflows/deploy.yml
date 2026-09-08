@@ -1,0 +1,84 @@
+# Blendwise: test, then deploy to the OVH host on every push to main.
+#
+# Delivery: `git archive` of the commit streamed over SSH to ubuntu@OVH_HOST. The SSH key in
+# secrets is restricted on the host to a single forced command (deploy/ci-receive.sh), which
+# extracts the archive into /opt/blendwise and runs deploy/ovh-deploy.sh. The key cannot open a
+# shell. The host's public key is pinned below so a changed host fails closed.
+#
+# Required repository secrets:
+#   OVH_SSH_KEY  private ed25519 key whose public half is in ubuntu's authorized_keys with the forced command
+#   OVH_HOST     the VPS address (40.160.89.57)
+
+name: Deploy to OVH
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-ovh
+  cancel-in-progress: false
+
+env:
+  SITE_URL: https://blendwise.amtocsoft.com
+  # ssh-keyscan -t ed25519 40.160.89.57 (captured 2026-09-07)
+  OVH_HOST_KEY: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPUxWZsDyBUtEK/zSWl1NHdjfrYtUfnd4AahuA2Nezyy"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+
+  deploy:
+    name: Deploy to OVH
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://blendwise.amtocsoft.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          OVH_SSH_KEY: ${{ secrets.OVH_SSH_KEY }}
+          OVH_HOST: ${{ secrets.OVH_HOST }}
+        run: |
+          set -euo pipefail
+          test -n "$OVH_SSH_KEY" && test -n "$OVH_HOST"
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$OVH_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          printf '%s %s\n' "$OVH_HOST" "$OVH_HOST_KEY" > ~/.ssh/known_hosts
+
+      - name: Ship archive and deploy
+        env:
+          OVH_HOST: ${{ secrets.OVH_HOST }}
+        run: |
+          set -euo pipefail
+          git archive --format=tar "$GITHUB_SHA" \
+            | ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes \
+                "ubuntu@$OVH_HOST" "deploy $GITHUB_SHA"
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          sleep 3
+          for path in / /sw.js /manifest.webmanifest; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$SITE_URL$path")
+            echo "$path -> $code"
+            test "$code" = "200"
+          done
+          curl -s "$SITE_URL/" | grep -q '<title>Blendwise</title>'

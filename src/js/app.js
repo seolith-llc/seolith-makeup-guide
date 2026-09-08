@@ -10,6 +10,7 @@ import { LEGAL_META } from '../data/legal.js';
 import { legalHtml } from './views/legal.js';
 import { TONES } from './face.js';
 import { flushQueue } from './views/feedback.js';
+import { ICONS } from './icons.js';
 
 import * as home from './views/home.js';
 import * as looks from './views/looks.js';
@@ -47,11 +48,11 @@ route('/privacy', legal);
 route('/more', more);
 
 const NAV = [
-  { href: '#/', icon: '🏠', label: 'Home', match: (p) => p === '/' },
-  { href: '#/looks', icon: '💄', label: 'Looks', match: (p) => p.startsWith('/look') },
-  { href: '#/products', icon: '🛍️', label: 'Products', match: (p) => p.startsWith('/products') },
-  { href: '#/insights', icon: '📈', label: 'Insights', match: (p) => p.startsWith('/insights') },
-  { href: '#/more', icon: '☰', label: 'More', match: (p) => ['/more', '/before-after', '/estimate', '/kit', '/tips', '/share', '/feedback', '/settings', '/admin', '/terms', '/privacy'].some((x) => p.startsWith(x)) },
+  { href: '#/', icon: 'home', label: 'Home', match: (p) => p === '/' },
+  { href: '#/looks', icon: 'looks', label: 'Looks', match: (p) => p.startsWith('/look') },
+  { href: '#/products', icon: 'bag', label: 'Products', match: (p) => p.startsWith('/products') },
+  { href: '#/insights', icon: 'chart', label: 'Insights', match: (p) => p.startsWith('/insights') },
+  { href: '#/more', icon: 'more', label: 'More', match: (p) => ['/more', '/before-after', '/estimate', '/kit', '/tips', '/share', '/feedback', '/settings', '/admin', '/terms', '/privacy'].some((x) => p.startsWith(x)) },
 ];
 
 let unmountCurrent = null;
@@ -68,7 +69,7 @@ function trackOpenOnce() {
 
 function renderNav(path) {
   const nav = qs('#nav');
-  nav.innerHTML = NAV.map((n) => h`<a class="nav-item ${n.match(path) ? 'is-active' : ''}" href="${n.href}" ${n.match(path) ? raw('aria-current="page"') : ''}><span class="nav-icon" aria-hidden="true">${n.icon}</span><span>${n.label}</span></a>`).join('');
+  nav.innerHTML = NAV.map((n) => h`<a class="nav-item ${n.match(path) ? 'is-active' : ''}" href="${n.href}" ${n.match(path) ? raw('aria-current="page"') : ''}><span class="nav-icon" aria-hidden="true">${raw(ICONS[n.icon])}</span><span>${n.label}</span></a>`).join('');
 }
 
 async function render() {

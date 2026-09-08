@@ -14,7 +14,7 @@ the stack somewhere else with the same tunnel credentials.
 | Tunnel config | `deploy/cloudflared/blendwise.yml` |
 | Credentials | `deploy/cloudflared/credentials.json`, gitignored. On the host it must be owned by uid 65532 (the `cloudflared` image's `nonroot` user) with mode 400; `ovh-deploy.sh` enforces this. Source: `~/.cloudflared/86a75bb1-3e1e-4d53-89c3-09e7b8658e59.json` on the workstation that created the tunnel |
 | OVH host | `vps-57bebaca.vps.ovh.us` = `40.160.89.57` (VPS-1, Ubuntu, Virginia). Also hosts the tax-manager stack behind Caddy; Blendwise does not use Caddy or any port. |
-| SSH | `ssh -i ~/.ssh/ovh-foxy ubuntu@40.160.89.57` from the workstation that holds that key |
+| SSH | `ssh -i ~/.ssh/blendwise-ops ubuntu@40.160.89.57` from the workstation that holds that key (Blendwise-specific operator key, authorised 2026-09-08; the older shared `ovh-foxy` key also still works) |
 | Cloudflare cache rule | "Blendwise: respect origin browser TTL" on zone `amtocsoft.com` (created 2026-09-08): `http.host eq "blendwise.amtocsoft.com"`, eligible for cache, Browser TTL = respect origin. Without it the zone's 4-hour browser TTL overrode `sw.js`'s `no-cache` and delayed PWA updates. |
 | Install path on OVH | `/opt/blendwise` (this host keeps projects directly under `/opt`) |
 | Repo access on host | None. Deploy keys are disabled by the org policy, so the workstation pushes a `git archive` of the commit over SSH (`deploy/push-to-ovh.sh`); the host never needs GitHub credentials. |

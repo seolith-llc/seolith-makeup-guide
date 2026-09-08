@@ -2,9 +2,9 @@
 // before launch and have the text reviewed by a lawyer for your jurisdiction.
 
 export const LEGAL_META = {
-  company: '[COMPANY NAME]',
+  company: 'SEOlith LLC',
   address: '[COMPANY ADDRESS]',
-  contact: '[CONTACT EMAIL]',
+  contact: 'seolith.com@gmail.com',
   jurisdiction: '[STATE / COUNTRY]',
   effective: '2026-09-07',
   version: 1,

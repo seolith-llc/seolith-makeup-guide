@@ -1,0 +1,13 @@
+# Cloudflare Tunnel "blendwise" (zone amtocsoft.com).
+# DNS: blendwise.amtocsoft.com CNAME 86a75bb1-3e1e-4d53-89c3-09e7b8658e59.cfargotunnel.com (proxied).
+# credentials.json is machine-local and gitignored; copy it from ~/.cloudflared/<tunnel-id>.json.
+tunnel: 86a75bb1-3e1e-4d53-89c3-09e7b8658e59
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: blendwise.amtocsoft.com
+    service: http://web:80
+    originRequest:
+      connectTimeout: 10s
+  # Anything else that reaches this tunnel is refused.
+  - service: http_status:404

@@ -52,7 +52,9 @@ docker build -t blendwise:local . && docker run --rm -p 8081:80 blendwise:local
 
 ## Deploy
 
-Deploy the container (any host that runs Docker images behind an HTTPS proxy), or copy the `src/` folder to any static host served over HTTPS (GitHub Pages, Netlify, Cloudflare Pages, S3 + CloudFront).
+Production runs at https://blendwise.amtocsoft.com through a Cloudflare Tunnel; the runbook is [docs/deploy-ovh.md](docs/deploy-ovh.md) and the stack is `deploy/docker-compose.ovh.yml`.
+
+Alternatively deploy the container on any host behind an HTTPS proxy, or copy the `src/` folder to any static host served over HTTPS (GitHub Pages, Netlify, Cloudflare Pages, S3 + CloudFront).
 Before release:
 
 1. Set the version with `node scripts/bump-version.mjs 1.0.1` so installed clients update.

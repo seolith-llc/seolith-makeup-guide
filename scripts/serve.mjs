@@ -10,7 +10,7 @@ const root = path.resolve('src');
 const port = Number(process.argv[2] || process.env.PORT || 8080);
 const types = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
+  '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8',
 };
 
 const server = http.createServer((req, res) => {
@@ -18,7 +18,10 @@ const server = http.createServer((req, res) => {
   let file = path.normalize(path.join(root, urlPath));
   if (!file.startsWith(root)) { res.writeHead(403); return res.end(); }
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-  if (!fs.existsSync(file)) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+  if (!fs.existsSync(file)) {
+    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+    return fs.createReadStream(path.join(root, '404.html')).pipe(res);
+  }
   const ext = path.extname(file).toLowerCase();
   res.writeHead(200, {
     'Content-Type': types[ext] || 'application/octet-stream',

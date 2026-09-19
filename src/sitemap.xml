@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Blendwise is a hash-routed single-page app: the only crawlable canonical URL is the root.
+     The passphrase-protected admin dashboard (#/admin) is a client-side fragment, is never
+     linked here, and carries a dynamic noindex meta tag at runtime. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://blendwise.amtocsoft.com/</loc></url>
+</urlset>

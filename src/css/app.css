@@ -133,6 +133,9 @@ img, svg { max-width: 100%; }
 .nav-icon svg { width: 1em; height: 1em; display: block; }
 
 .view { max-width: 980px; margin: 0 auto; padding: 1.1rem max(1.1rem, var(--safe-r)) 1.5rem max(1.1rem, var(--safe-l)); }
+.footer { max-width: 980px; margin: 0 auto; padding: 1.1rem max(1.1rem, var(--safe-r)) 1.5rem max(1.1rem, var(--safe-l)); border-top: 1px solid var(--border); text-align: center; }
+.footer-links { display: flex; justify-content: center; gap: 1.4rem; margin-bottom: 0.4rem; }
+.footer p { margin: 0; }
 .section { margin-bottom: 1.6rem; }
 .lede { color: var(--muted); font-size: 1.05rem; }
 .muted { color: var(--muted); }

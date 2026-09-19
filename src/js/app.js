@@ -58,6 +58,41 @@ const NAV = [
 let unmountCurrent = null;
 let openTracked = false;
 
+const DEFAULT_DESCRIPTION = 'Blendwise: step-by-step makeup routines with timers, a before-and-after guide, product picks and a kit tracker. Works offline.';
+const ROUTE_DESCRIPTIONS = {
+  '/': DEFAULT_DESCRIPTION,
+  '/looks': 'Browse seven guided makeup routines, from a 5-minute face to full glam, each with step-by-step timers and tips.',
+  '/look': 'A guided Blendwise makeup routine: step-by-step how-to, tips, common mistakes and a built-in timer.',
+  '/before-after': 'See what each makeup step changes: a layered before-and-after illustration that adds one product at a time.',
+  '/estimate': 'Per-step time estimates for beginner, intermediate and advanced, personalised after three timed runs.',
+  '/products': 'Curated makeup product picks with editorial ratings, skin-type fit and clearly disclosed affiliate links.',
+  '/kit': 'My Kit: track period-after-opening dates and know when to replace mascara, liner and everything else.',
+  '/insights': 'Streaks, average time versus estimate, slow steps and a suggested next look, from data on your device only.',
+  '/tips': 'Makeup tips and techniques matched to your skill level and skin type.',
+  '/feedback': 'Send feature requests, bug reports and content corrections. Stored on your device until you choose to share.',
+  '/share': 'Share Blendwise with a friend: an invite link with an anonymous code and no personal information.',
+  '/settings': 'Blendwise settings: profile, anonymous usage statistics, export or delete all of your on-device data.',
+  '/more': 'More of Blendwise: before-and-after, time estimates, kit tracker, tips, settings and legal pages.',
+  '/terms': 'Terms of use for Blendwise, the offline-first educational makeup guide published by SEOlith LLC.',
+  '/privacy': 'Privacy Policy for Blendwise: no accounts, no cookies, no server — everything you enter stays on your device.',
+};
+
+function setPageMeta(path, title) {
+  const key = '/' + (path.split('/')[1] || '');
+  document.title = title ? `${title} · ${CONFIG.appName}` : CONFIG.appName;
+  qs('meta[name="description"]').setAttribute('content', ROUTE_DESCRIPTIONS[key] || DEFAULT_DESCRIPTION);
+  // The admin dashboard is a private area: keep it out of any index even though it is a hash route.
+  let robots = qs('meta[name="robots"]');
+  if (key === '/admin') {
+    if (!robots) {
+      robots = document.createElement('meta');
+      robots.name = 'robots';
+      document.head.appendChild(robots);
+    }
+    robots.setAttribute('content', 'noindex, nofollow');
+  } else if (robots) robots.remove();
+}
+
 function trackOpenOnce() {
   if (openTracked) return;
   openTracked = true;
@@ -80,8 +115,11 @@ async function render() {
   if (typeof unmountCurrent === 'function') { try { unmountCurrent(); } catch {} }
   unmountCurrent = null;
   if (!m) {
-    view.innerHTML = h`<section class="section"><h1>Page not found</h1><a class="link" href="#/">Home</a></section>`;
-    document.title = `Not found · ${CONFIG.appName}`;
+    view.innerHTML = h`<section class="section"><h1>Page not found</h1>
+      <p class="lede">That page does not exist — it may have moved, or the link is mistyped.</p>
+      <p><a class="btn btn-primary" href="#/">Back to home</a></p>
+      <p class="muted"><a class="link" href="#/looks">Browse looks</a> · <a class="link" href="#/products">Product picks</a> · <a class="link" href="#/tips">Tips</a></p></section>`;
+    setPageMeta(path, 'Page not found');
     renderNav(path);
     return;
   }
@@ -89,7 +127,7 @@ async function render() {
   try {
     const result = await m.view.view({ params: m.params, query, path });
     view.innerHTML = result.html;
-    document.title = `${result.title} · ${CONFIG.appName}`;
+    setPageMeta(path, result.title);
     renderNav(path);
     qs('#fb-link').href = `#/feedback?from=${encodeURIComponent(path)}`;
     if (result.mount) unmountCurrent = result.mount(view) || null;

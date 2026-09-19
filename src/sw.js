@@ -5,7 +5,11 @@ const CACHE_VERSION = 'blendwise-v1.1.1';
 const PRECACHE = [
   './',
   './index.html',
+  './404.html',
   './manifest.webmanifest',
+  './robots.txt',
+  './sitemap.xml',
+  './og-image.png',
   './css/app.css',
   './icons/icon.svg',
   './icons/icon-192.png',

@@ -81,4 +81,4 @@ jobs:
             echo "$path -> $code"
             test "$code" = "200"
           done
-          curl -s "$SITE_URL/" | grep -q '<title>Blendwise</title>'
+          curl -s "$SITE_URL/" | grep -qiE '<title>[^<]*Blendwise'

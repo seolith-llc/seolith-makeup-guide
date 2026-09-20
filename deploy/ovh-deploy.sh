@@ -40,14 +40,24 @@ for _ in $(seq 1 30); do
 done
 [[ "$health" == "healthy" ]] || { echo "blendwise-web is not healthy ($health)" >&2; "${compose[@]}" logs --tail=50 web; exit 1; }
 
+# The tunnel container is only recreated when its config changes, so after most deploys
+# there are no NEW "Registered tunnel connection" log lines to wait for (and the old ones
+# rotate away). Accept either fresh registration lines in the logs or a running tunnel
+# connector plus the public site answering through the tunnel.
 for _ in $(seq 1 30); do
-  if "${compose[@]}" logs tunnel 2>&1 | grep -q "Registered tunnel connection"; then
+  if "${compose[@]}" logs --since=90s tunnel 2>&1 | grep -q "Registered tunnel connection"; then
     echo "tunnel connector registered; https://blendwise.amtocsoft.com is served from this host"
+    docker image prune -f >/dev/null
+    exit 0
+  fi
+  tunnel_state=$(docker inspect --format '{{.State.Status}}' blendwise-tunnel 2>/dev/null || echo missing)
+  if [[ "$tunnel_state" == "running" ]] && curl -sf -o /dev/null --max-time 10 https://blendwise.amtocsoft.com/; then
+    echo "tunnel connector running and site reachable through the tunnel"
     docker image prune -f >/dev/null
     exit 0
   fi
   sleep 2
 done
-echo "tunnel did not register within 60s" >&2
+echo "tunnel did not register and site is not reachable" >&2
 "${compose[@]}" logs --tail=50 tunnel
 exit 1

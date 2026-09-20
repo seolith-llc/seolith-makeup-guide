@@ -10,6 +10,13 @@
 # deliver an archive and trigger the deploy; it cannot open a shell or run anything else.
 set -euo pipefail
 
+# Self-heal: if /dev/null has been replaced by a regular file (seen 2026-09-20;
+# every redirect in the deploy then fails with "Permission denied"), restore the
+# device node before doing anything else.
+if [[ ! -c /dev/null ]]; then
+  sudo -n rm -f /dev/null && sudo -n mknod /dev/null c 1 3 && sudo -n chmod 666 /dev/null
+fi
+
 DEST=/opt/blendwise
 req="${SSH_ORIGINAL_COMMAND:-}"
 if [[ ! "$req" =~ ^deploy\ ([0-9a-f]{7,40})$ ]]; then

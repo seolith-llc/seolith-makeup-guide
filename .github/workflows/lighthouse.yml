@@ -1,0 +1,23 @@
+name: Lighthouse Budgets
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    uses: seolith-llc/seolith-dev-standards/.github/workflows/lighthouse.yml@main
+    with:
+      project-path: "."
+      install-command: ""
+      build-command: ""
+      output-dir: "src"
+      urls: |
+        /
+        /#/privacy
+        /#/terms
+      budget-preset: "app"
+      runs-on: '["ubuntu-latest"]'

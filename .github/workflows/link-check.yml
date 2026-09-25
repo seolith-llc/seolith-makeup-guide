@@ -1,0 +1,17 @@
+name: Link Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  link-check:
+    uses: seolith-llc/seolith-dev-standards/.github/workflows/link-check.yml@main
+    with:
+      scan-path: "."
+      runs-on: '["ubuntu-latest"]'

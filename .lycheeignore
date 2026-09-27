@@ -5,3 +5,13 @@
 # archive directory they point nowhere. Rewriting historical archives would
 # falsify them, so lychee skips any URL under this directory.
 docs/prompts-history/
+
+# Prompt-history archives also quote stack traces with absolute Windows
+# paths (file:///D:/...) from the dev machine; those can never resolve in CI.
+file:///[A-Za-z]:/
+
+# fda.gov abuse-detection intermittently 302-redirects bots to an apology
+# page, which lychee reports as 404 (observed 2026-09-27 on the PR run; the
+# same links passed on run 36190087927 and work in a browser). Sources cited
+# in docs/research.md.
+https://www\.fda\.gov/

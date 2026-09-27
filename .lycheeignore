@@ -15,3 +15,8 @@ file:///[A-Za-z]:/
 # same links passed on run 36190087927 and work in a browser). Sources cited
 # in docs/research.md.
 https://www\.fda\.gov/
+
+# beautylish.com returns 403 to non-browser user agents; the cited thread
+# returns 200 with a browser UA (verified 2026-09-27). Source cited in
+# docs/research.md.
+https://www\.beautylish\.com/

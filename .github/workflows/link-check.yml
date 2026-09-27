@@ -14,4 +14,9 @@ jobs:
     uses: seolith-llc/seolith-dev-standards/.github/workflows/link-check.yml@main
     with:
       scan-path: "."
+      # nginx serves src/ as the web root (see Dockerfile), so root-absolute
+      # hrefs like /css/app.css in src/*.html must resolve against src/, not
+      # the repo root.
+      args: "--root-dir src"
       runs-on: '["ubuntu-latest"]'
+      fail-on-error: true

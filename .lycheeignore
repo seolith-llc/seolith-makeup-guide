@@ -1,0 +1,22 @@
+# docs/prompts-history/ holds archived prompt-session logs written by
+# scripts/prompt-history.mjs. Links inside them (repo-relative paths like
+# docs/deploy-ovh.md, and stack traces with absolute Windows paths) were
+# valid in the original session context at the repo root; resolved from the
+# archive directory they point nowhere. Rewriting historical archives would
+# falsify them, so lychee skips any URL under this directory.
+docs/prompts-history/
+
+# Prompt-history archives also quote stack traces with absolute Windows
+# paths (file:///D:/...) from the dev machine; those can never resolve in CI.
+file:///[A-Za-z]:/
+
+# fda.gov abuse-detection intermittently 302-redirects bots to an apology
+# page, which lychee reports as 404 (observed 2026-09-27 on the PR run; the
+# same links passed on run 36190087927 and work in a browser). Sources cited
+# in docs/research.md.
+https://www\.fda\.gov/
+
+# beautylish.com returns 403 to non-browser user agents; the cited thread
+# returns 200 with a browser UA (verified 2026-09-27). Source cited in
+# docs/research.md.
+https://www\.beautylish\.com/

@@ -20,3 +20,24 @@ https://www\.fda\.gov/
 # returns 200 with a browser UA (verified 2026-09-27). Source cited in
 # docs/research.md.
 https://www\.beautylish\.com/
+
+# 2026-10-04: patrickta.com rate-limits CI traffic with 429 Too Many
+# Requests (observed on the ux-pass/g1 PR run; main's link-check passed on
+# 2026-09-27 and the article loads in a browser). Source cited in
+# docs/research.md.
+https://patrickta\.com/
+
+# 2026-10-04: colorescience.com rate-limits CI traffic with 429 Too Many
+# Requests (same run as patrickta.com above; loads fine in a browser).
+# Source cited in docs/research.md.
+https://www\.colorescience\.com/
+
+# 2026-10-04: ibacosmetics.com rate-limits CI traffic with 429 Too Many
+# Requests (observed on run 37194850932; returns 200 from non-CI IPs and
+# loads fine in a browser). Source cited in docs/research.md.
+https://ibacosmetics\.com/
+
+# 2026-10-04: typsybeauty.com rate-limits CI traffic with 429 Too Many
+# Requests (same run as ibacosmetics.com above; loads fine in a browser).
+# Source cited in docs/research.md.
+https://typsybeauty\.com/

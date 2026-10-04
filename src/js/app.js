@@ -121,6 +121,7 @@ async function render() {
       <p class="muted"><a class="link" href="#/looks">Browse looks</a> · <a class="link" href="#/products">Product picks</a> · <a class="link" href="#/tips">Tips</a></p></section>`;
     setPageMeta(path, 'Page not found');
     renderNav(path);
+    view.focus({ preventScroll: true });
     return;
   }
   trackOpenOnce();
@@ -132,10 +133,12 @@ async function render() {
     qs('#fb-link').href = `#/feedback?from=${encodeURIComponent(path)}`;
     if (result.mount) unmountCurrent = result.mount(view) || null;
     window.scrollTo(0, 0);
+    view.focus({ preventScroll: true });
     track('page_view', { page: path.split('/').slice(0, 2).join('/') || '/' });
   } catch (err) {
     console.error(err);
     view.innerHTML = h`<section class="section"><h1>Something went wrong</h1><p class="muted">${err.message}</p><a class="link" href="#/">Home</a></section>`;
+    view.focus({ preventScroll: true });
   }
 }
 
@@ -150,7 +153,7 @@ function showConsent() {
   document.body.classList.add('has-overlay');
   const tabs = [['summary', 'Summary'], ['terms', 'Terms'], ['privacy', 'Privacy']];
   overlay.innerHTML = h`
-    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="consent-title" tabindex="-1">
       <h1 id="consent-title">Welcome to ${CONFIG.appName}</h1>
       <div class="segmented" role="tablist">${tabs.map(([id, label], i) => raw(h`<button class="seg ${i === 0 ? 'is-active' : ''}" role="tab" data-tab="${id}" aria-selected="${i === 0}">${label}</button>`))}</div>
       <div class="overlay-body" data-panel="summary">
@@ -169,6 +172,17 @@ function showConsent() {
     </div>`;
   const cb = qs('#consent-terms');
   cb.addEventListener('change', () => { qs('#consent-continue').disabled = !cb.checked; });
+  qs('.overlay-card', overlay).focus();
+  qs('.segmented', overlay).addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const tabEls = Array.from(overlay.querySelectorAll('[data-tab]'));
+    const i = tabEls.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    const next = tabEls[(i + (e.key === 'ArrowRight' ? 1 : tabEls.length - 1)) % tabEls.length];
+    next.focus();
+    next.click();
+  });
   overlay.addEventListener('click', (e) => {
     const tab = e.target.closest('[data-tab]');
     if (tab) {
@@ -186,7 +200,7 @@ function showOnboarding() {
   const overlay = qs('#overlay');
   if (getPrefs().onboarded) return hideOverlay();
   overlay.innerHTML = h`
-    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="ob-title">
+    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="ob-title" tabindex="-1">
       <h1 id="ob-title">About you</h1>
       <p class="muted">Used only to pick times, tips and the illustration. Change any time in Settings.</p>
       <label class="field"><span>How experienced are you with makeup?</span>
@@ -197,6 +211,7 @@ function showOnboarding() {
         <select id="ob-tone">${Object.entries(TONES).map(([id, t]) => raw(h`<option value="${id}" ${id === 'medium' ? 'selected' : ''}>${t.name}</option>`))}</select></label>
       <button class="btn btn-primary btn-large" id="ob-done">Start</button>
     </div>`;
+  qs('.overlay-card', overlay).focus();
   qs('#ob-done').addEventListener('click', () => {
     setPrefs({ skill: qs('#ob-skill').value, skinType: qs('#ob-skin').value, skinTone: qs('#ob-tone').value, onboarded: true });
     hideOverlay();
@@ -227,8 +242,24 @@ function updateOnline() {
   if (navigator.onLine) flushQueue();
 }
 
+// Keep Tab cycling inside the modal overlay while it is open; the page behind is not reachable.
+function trapFocus(overlay) {
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const focusables = Array.from(overlay.querySelectorAll('button, input, select, textarea, a[href]')).filter((el) => !el.disabled && el.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
 function boot() {
   qs('#brand').textContent = CONFIG.appName;
+  // The skip link must not go through the hash router ("#view" is not a route): focus the main region directly.
+  qs('.skip-link').addEventListener('click', (e) => { e.preventDefault(); qs('#view').focus(); });
+  trapFocus(qs('#overlay'));
   handleReferral();
   initPwa();
   updateOnline();

@@ -97,7 +97,7 @@ async function dashboardHtml() {
         <h2>Data</h2>
         <div class="cta-row">
           <button class="btn" id="admin-export">Export aggregate + raw (JSON)</button>
-          <label class="btn file-btn">Import a user's statistics export <input type="file" id="admin-import" accept="application/json,.json" hidden /></label>
+          <label class="btn file-btn" tabindex="0">Import a user's statistics export <input type="file" id="admin-import" accept="application/json,.json" hidden /></label>
           <button class="btn btn-ghost" id="admin-clear-imports">Clear imports</button>
         </div>
         <p class="muted small">Users export their statistics from Settings; import the JSON here to aggregate across devices. Imports are stored on this device only.</p>
@@ -157,7 +157,11 @@ export async function view() {
         download(`blendwise-admin-${Date.now()}.json`, JSON.stringify({ app: CONFIG.appName, version: CONFIG.version, exportedAt: new Date().toISOString(), aggregate: aggregate(events), feedback: await dbAll('feedback'), events }, null, 2));
       });
       const imp = root.querySelector('#admin-import');
-      if (imp) imp.addEventListener('change', async () => {
+      if (imp) {
+        imp.closest('.file-btn').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); imp.click(); }
+        });
+        imp.addEventListener('change', async () => {
         const file = imp.files[0];
         if (!file) return;
         try {
@@ -169,6 +173,7 @@ export async function view() {
           window.dispatchEvent(new HashChangeEvent('hashchange'));
         } catch { toast('Could not read that file'); }
       });
+      }
       const clr = root.querySelector('#admin-clear-imports');
       if (clr) clr.addEventListener('click', async () => { await dbClear('imported'); window.dispatchEvent(new HashChangeEvent('hashchange')); });
       root.addEventListener('click', async (e) => {

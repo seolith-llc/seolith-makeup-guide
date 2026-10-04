@@ -14,6 +14,13 @@ const MIN_LEN = 8;
 function unlocked() { try { return sessionStorage.getItem(UNLOCK_KEY) === '1'; } catch { return false; } }
 function setUnlocked(v) { try { v ? sessionStorage.setItem(UNLOCK_KEY, '1') : sessionStorage.removeItem(UNLOCK_KEY); } catch {} }
 
+function formError(form, msg) {
+  const el = form.querySelector('.field-error');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.hidden = !msg;
+}
+
 function bars(rows, { label = (k) => k, max = null } = {}) {
   if (!rows.length) return '<p class="muted small">No data yet.</p>';
   const top = max ?? Math.max(...rows.map((r) => r[1]), 1);
@@ -26,6 +33,7 @@ function setupHtml() {
     <form id="admin-setup" class="card">
       <label class="field"><span>Passphrase</span><input type="password" id="pp1" minlength="${MIN_LEN}" autocomplete="new-password" required /></label>
       <label class="field"><span>Repeat passphrase</span><input type="password" id="pp2" minlength="${MIN_LEN}" autocomplete="new-password" required /></label>
+      <p class="field-error" hidden></p>
       <button class="btn btn-primary" type="submit">Set passphrase</button>
     </form>
     <p class="muted small">This gate stops casual access on a shared device. It is not a security boundary against someone with the device and developer tools, because all data lives in the browser.</p></section>`;
@@ -35,6 +43,7 @@ function loginHtml() {
   return h`<section class="section"><h1>Admin</h1>
     <form id="admin-login" class="card">
       <label class="field"><span>Passphrase</span><input type="password" id="pp" autocomplete="current-password" required /></label>
+      <p class="field-error" hidden></p>
       <button class="btn btn-primary" type="submit">Unlock</button>
     </form>
     <p class="muted small">Forgot it? Deleting all data in Settings removes the passphrase too (and everything else).</p></section>`;
@@ -99,6 +108,7 @@ async function dashboardHtml() {
         <form id="admin-change" class="form-grid">
           <label class="field"><span>New passphrase</span><input type="password" id="np1" minlength="${MIN_LEN}" autocomplete="new-password" required /></label>
           <label class="field"><span>Repeat</span><input type="password" id="np2" minlength="${MIN_LEN}" autocomplete="new-password" required /></label>
+          <p class="field-error" hidden></p>
           <button class="btn" type="submit">Change</button>
         </form>
       </div>
@@ -121,8 +131,9 @@ export async function view() {
       if (setup) setup.addEventListener('submit', async (e) => {
         e.preventDefault();
         const a = root.querySelector('#pp1').value, b = root.querySelector('#pp2').value;
-        if (a.length < MIN_LEN) return toast(`Use at least ${MIN_LEN} characters`);
-        if (a !== b) return toast('Passphrases do not match');
+        if (a.length < MIN_LEN) return formError(setup, `Use at least ${MIN_LEN} characters`);
+        if (a !== b) return formError(setup, 'Passphrases do not match');
+        formError(setup, '');
         setPrefs({ admin: await hashPassphrase(a) });
         setUnlocked(true);
         window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -131,7 +142,8 @@ export async function view() {
       if (login) login.addEventListener('submit', async (e) => {
         e.preventDefault();
         const ok = await verifyPassphrase(root.querySelector('#pp').value, getPrefs().admin);
-        if (!ok) { toast('Wrong passphrase'); await new Promise((r) => setTimeout(r, 800)); return; }
+        if (!ok) { formError(login, 'Wrong passphrase'); await new Promise((r) => setTimeout(r, 800)); return; }
+        formError(login, '');
         setUnlocked(true);
         window.dispatchEvent(new HashChangeEvent('hashchange'));
       });
@@ -167,7 +179,8 @@ export async function view() {
       if (change) change.addEventListener('submit', async (e) => {
         e.preventDefault();
         const a = root.querySelector('#np1').value, b = root.querySelector('#np2').value;
-        if (a.length < MIN_LEN || a !== b) return toast('Check the passphrase and repeat');
+        if (a.length < MIN_LEN || a !== b) return formError(change, 'Check the passphrase and repeat');
+        formError(change, '');
         setPrefs({ admin: await hashPassphrase(a) });
         toast('Passphrase changed');
         change.reset();

@@ -67,3 +67,9 @@ Same-kind elements share one class: `.btn` (+ `-primary`/`-ghost`/`-danger`,
 `-large`/`-small`), `.icon-btn`, `.card`, `.field` inputs, `.chip`,
 `.menu-item`, `.stat`, `.overlay-card`. Hover/active/disabled states are
 defined on those classes — extend them rather than adding per-instance styles.
+
+States: form errors render inline next to the offending field with
+`.field-error`; submitting a form disables its submit button and reports
+success or failure via a toast. Overlays, toasts, tab panels and step cards
+enter with a ~180-220ms fade/pop animation (`fade-in` / `pop-in` / `rise-in`
+keyframes, disabled under `prefers-reduced-motion`).

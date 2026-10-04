@@ -38,6 +38,7 @@ export async function view({ query }) {
         <label class="field"><span>What happened, or what would you like?</span>
           <textarea id="fb-message" rows="5" maxlength="2000" required placeholder="Be specific: which look, which step, what you expected."></textarea>
         </label>
+        <p class="field-error" id="fb-error" hidden></p>
         <label class="field"><span>Contact (optional, only if you want a reply)</span>
           <input type="text" id="fb-contact" maxlength="120" autocomplete="off" placeholder="email or handle" />
         </label>
@@ -48,7 +49,7 @@ export async function view({ query }) {
     </section>`;
 
   function listHtml(list) {
-    if (!list.length) return '';
+    if (!list.length) return '<p class="muted">No feedback saved yet.</p>';
     return h`<h2>Your feedback</h2><ul class="plain-list">${[...list].reverse().map((f) => raw(h`<li class="card feedback-item">
       <p class="muted small">${TYPES[f.type] || f.type} · ${new Date(f.createdAt).toLocaleString()} · ${f.sentAt ? 'sent' : 'on this device'}</p>
       <p class="prewrap">${f.message}</p>
@@ -67,20 +68,33 @@ export async function view({ query }) {
       const list = root.querySelector('#fb-list');
       root.querySelector('#fb-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const submit = root.querySelector('#fb-form [type="submit"]');
+        const error = root.querySelector('#fb-error');
+        const message = root.querySelector('#fb-message');
         const item = {
           type: root.querySelector('#fb-type').value,
-          message: root.querySelector('#fb-message').value.trim().slice(0, 2000),
+          message: message.value.trim().slice(0, 2000),
           contact: root.querySelector('#fb-contact').value.trim().slice(0, 120),
           version: CONFIG.version,
           page: fromPage.slice(0, 60),
           createdAt: new Date().toISOString(),
         };
-        if (!item.message) return;
+        if (!item.message) {
+          error.textContent = 'Write a few words about what happened or what you would like.';
+          error.hidden = false;
+          message.focus();
+          return;
+        }
+        error.hidden = true;
+        submit.disabled = true;
+        submit.textContent = 'Saving…';
         const id = await dbAdd('feedback', item);
         track('feedback_submit', { type: item.type, page: fromPage.slice(0, 40) });
         const sent = await trySend({ ...item, id });
         toast(sent ? 'Feedback sent. Thank you.' : 'Saved on this device. Use Copy or Share to send it.');
-        root.querySelector('#fb-message').value = '';
+        message.value = '';
+        submit.disabled = false;
+        submit.textContent = 'Save feedback';
         list.innerHTML = listHtml(await dbAll('feedback'));
       });
       list.addEventListener('click', async (e) => {

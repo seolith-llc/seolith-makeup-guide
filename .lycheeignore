@@ -31,3 +31,13 @@ https://patrickta\.com/
 # Requests (same run as patrickta.com above; loads fine in a browser).
 # Source cited in docs/research.md.
 https://www\.colorescience\.com/
+
+# 2026-10-04: ibacosmetics.com rate-limits CI traffic with 429 Too Many
+# Requests (observed on run 37194850932; returns 200 from non-CI IPs and
+# loads fine in a browser). Source cited in docs/research.md.
+https://ibacosmetics\.com/
+
+# 2026-10-04: typsybeauty.com rate-limits CI traffic with 429 Too Many
+# Requests (same run as ibacosmetics.com above; loads fine in a browser).
+# Source cited in docs/research.md.
+https://typsybeauty\.com/
